@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+
+body{
+background:rgba(0,0,0,0.78);
+margin:0;
+font-family:Segoe UI,Arial;
+color:white;
+}
+
+#timer{
+font-size:80px;
+font-weight:bold;
+margin-bottom:10px;
+text-shadow:0 0 10px black,0 0 20px black;
+}
+
+#pace{
+font-size:26px;
+margin-bottom:12px;
+text-shadow:0 0 6px black,0 0 12px black;
+}
+
+.split{
+margin:4px 0;
+font-size:28px;
+text-shadow:0 0 6px black,0 0 12px black;
+}
+
+.current{
+color:#00e5ff;
+font-weight:bold;
+text-shadow:0 0 10px #00e5ff,0 0 20px black;
+}
+
+.done{
+color:#bbbbbb;
+}
+
+.gain{
+color:#00ff88;
+}
+
+.lose{
+color:#ff4d4d;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="timer">00:00.000</div>
+<div id="pace">Pace: --</div>
+<div id="splits"></div>
+
+<script>
+
+const TARGET_TIME = 50 * 60 * 1000 // sub 50
+
+const stages=[
+"City Slums",
+"Sumeragi Building 13",
+"Auto-fab Plant",
+"Store Ruins",
+"Medical Center",
+"Data Center Beta",
+"Data Center Alpha",
+"Radio Tower Artemis",
+"City Slums 2",
+"Sumeragi Secret Bunker 1",
+"Sumeragi Secret Bunker 2",
+"Sumeragi Secret Bunker 3"
+]
+
+let start=0
+let time=0
+let running=false
+let split=0
+let splits=[]
+let best=JSON.parse(localStorage.getItem("ix_best"))||[]
+
+const splitsDiv=document.getElementById("splits")
+
+function format(t){
+
+let m=Math.floor(t/60000)
+let s=Math.floor((t%60000)/1000)
+let ms=t%1000
+
+return String(m).padStart(2,'0')+":"+
+String(s).padStart(2,'0')+"."+
+String(ms).padStart(3,'0')
+
+}
+
+function draw(){
+
+splitsDiv.innerHTML=""
+
+stages.forEach((name,i)=>{
+
+let div=document.createElement("div")
+div.className="split"
+
+if(i<split) div.classList.add("done")
+if(i===split) div.classList.add("current")
+
+let text=name
+
+if(splits[i]!=null){
+
+text+=" - "+format(splits[i])
+
+if(best[i]){
+
+let diff=splits[i]-best[i]
+
+if(diff<0){
+text+=" ( -"+format(Math.abs(diff))+" )"
+div.classList.add("gain")
+}
+else if(diff>0){
+text+=" ( +"+format(diff)+" )"
+div.classList.add("lose")
+}
+
+}
+
+}
+
+div.innerText=text
+splitsDiv.appendChild(div)
+
+})
+
+}
+
+function update(){
+
+if(running){
+time=Date.now()-start
+}
+
+document.getElementById("timer").innerText=format(time)
+
+updatePace()
+
+requestAnimationFrame(update)
+
+}
+
+function updatePace(){
+
+if(split===0){
+document.getElementById("pace").innerText="Pace: --"
+return
+}
+
+let expected=best[split-1]
+
+if(!expected){
+document.getElementById("pace").innerText="Pace: --"
+return
+}
+
+let diff=time-expected
+
+let targetRemaining=TARGET_TIME-expected
+
+let projected=time+targetRemaining
+
+let text="Pace: "+format(projected)
+
+if(projected<TARGET_TIME){
+text+=" (SUB 50 🔥)"
+}
+
+document.getElementById("pace").innerText=text
+
+}
+
+document.addEventListener("keydown",(e)=>{
+
+if(e.code==="Digit1"){
+
+if(!running){
+start=Date.now()
+time=0
+running=true
+}
+
+}
+
+if(e.code==="Digit2"){
+
+if(running && split<stages.length){
+
+time=Date.now()-start
+
+splits[split]=time
+
+if(!best[split] || time<best[split]){
+best[split]=time
+localStorage.setItem("ix_best",JSON.stringify(best))
+}
+
+split++
+draw()
+
+if(split===stages.length){
+running=false
+}
+
+}
+
+}
+
+if(e.code==="Digit3"){
+
+running=false
+time=0
+split=0
+splits=[]
+draw()
+
+}
+
+})
+
+draw()
+update()
+
+</script>
+
+</body>
+</html>
