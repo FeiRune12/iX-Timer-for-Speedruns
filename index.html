@@ -6,78 +6,64 @@
 <style>
 
 body{
-  background:rgba(0,0,0,0.78);
-  margin:0;
-  font-family:Segoe UI,Arial;
-  color:white;
-  text-align:center;
+background:rgba(0,0,0,0.78);
+margin:0;
+font-family:Segoe UI,Arial;
+color:white;
 }
 
 #timer{
-  font-size:80px;
-  font-weight:bold;
-  margin-bottom:10px;
-  text-shadow:0 0 10px black,0 0 20px black;
+font-size:80px;
+font-weight:bold;
+margin-bottom:10px;
+text-shadow:0 0 10px rgb(255, 255, 255),0 0 20px black;
+}
+
+#game_title{
+font-size:36px;
+font-weight:bold;
+margin-bottom:10px;
+text-shadow:0 0 10px rgb(255, 0, 0),0 0 20px black;
 }
 
 #pace{
-  font-size:26px;
-  margin-bottom:12px;
-  text-shadow:0 0 6px black,0 0 12px black;
+font-size:26px;
+margin-bottom:12px;
+text-shadow:0 0 6px black,0 0 12px black;
 }
 
 .split{
-  margin:4px 0;
-  font-size:28px;
-  text-shadow:0 0 6px black,0 0 12px black;
+margin:4px 0;
+font-size:28px;
+text-shadow:0 0 6px black,0 0 12px black;
 }
 
 .current{
-  color:#00e5ff;
-  font-weight:bold;
-  text-shadow:0 0 10px #00e5ff,0 0 20px black;
+color:#00e5ff;
+font-weight:bold;
+text-shadow:0 0 10px #00e5ff,0 0 20px black;
 }
 
 .done{
-  color:#bbbbbb;
+color:#bbbbbb;
 }
 
 .gain{
-  color:#00ff88;
+color:#00ff88;
 }
 
 .lose{
-  color:#ff4d4d;
+color:#ff4d4d;
 }
-
-button{
-  font-size:20px;
-  margin:5px;
-  padding:10px 20px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-#startBtn{background-color:#00e5ff;color:black;}
-#splitBtn{background-color:#00ff88;color:black;}
-#resetBtn{background-color:#ff4d4d;color:white;}
 
 </style>
 </head>
 
 <body>
 
+<div id="game_title">Gunvolt Chronicles Luminous Avenger iX</div>
 <div id="timer">00:00.000</div>
 <div id="pace">Pace: --</div>
-
-<div>
-  <button id="startBtn">Iniciar/Start</button>
-  <button id="splitBtn">Marcar Split/Set Split</button>
-  <button id="resetBtn">Resetar/Reset</button>
-</div>
-
 <div id="splits"></div>
 
 <script>
@@ -109,85 +95,149 @@ let best=JSON.parse(localStorage.getItem("ix_best"))||[]
 const splitsDiv=document.getElementById("splits")
 
 function format(t){
-  let m=Math.floor(t/60000)
-  let s=Math.floor((t%60000)/1000)
-  let ms=t%1000
-  return String(m).padStart(2,'0')+":"+
-         String(s).padStart(2,'0')+"."+
-         String(ms).padStart(3,'0')
+
+let m=Math.floor(t/60000)
+let s=Math.floor((t%60000)/1000)
+let ms=t%1000
+
+return String(m).padStart(2,'0')+":"+
+String(s).padStart(2,'0')+"."+
+String(ms).padStart(3,'0')
+
 }
 
 function draw(){
-  splitsDiv.innerHTML=""
-  stages.forEach((name,i)=>{
-    let div=document.createElement("div")
-    div.className="split"
-    if(i<split) div.classList.add("done")
-    if(i===split) div.classList.add("current")
-    let text=name
-    if(splits[i]!=null){
-      text+=" - "+format(splits[i])
-      if(best[i]){
-        let diff=splits[i]-best[i]
-        if(diff<0){ text+=" ( -"+format(Math.abs(diff))+" )"; div.classList.add("gain") }
-        else if(diff>0){ text+=" ( +"+format(diff)+" )"; div.classList.add("lose") }
-      }
-    }
-    div.innerText=text
-    splitsDiv.appendChild(div)
-  })
+
+splitsDiv.innerHTML=""
+
+stages.forEach((name,i)=>{
+
+let div=document.createElement("div")
+div.className="split"
+
+if(i<split) div.classList.add("done")
+if(i===split) div.classList.add("current")
+
+let text=name
+
+if(splits[i]!=null){
+
+text+=" - "+format(splits[i])
+
+if(best[i]){
+
+let diff=splits[i]-best[i]
+
+if(diff<0){
+text+=" ( -"+format(Math.abs(diff))+" )"
+div.classList.add("gain")
+}
+else if(diff>0){
+text+=" ( +"+format(diff)+" )"
+div.classList.add("lose")
+}
+
+}
+
+}
+
+div.innerText=text
+splitsDiv.appendChild(div)
+
+})
+
 }
 
 function update(){
-  if(running) time=Date.now()-start
-  document.getElementById("timer").innerText=format(time)
-  updatePace()
-  requestAnimationFrame(update)
+
+if(running){
+time=Date.now()-start
+}
+
+document.getElementById("timer").innerText=format(time)
+
+updatePace()
+
+requestAnimationFrame(update)
+
 }
 
 function updatePace(){
-  if(split===0){
-    document.getElementById("pace").innerText="Pace: --"
-    return
-  }
-  let expected=best[split-1]
-  if(!expected){ document.getElementById("pace").innerText="Pace: --"; return }
-  let targetRemaining=TARGET_TIME-expected
-  let projected=time+targetRemaining
-  let text="Pace: "+format(projected)
-  if(projected<TARGET_TIME){ text+=" (SUB 50 🔥)" }
-  document.getElementById("pace").innerText=text
+
+if(split===0){
+document.getElementById("pace").innerText="Pace: --"
+return
 }
 
-// Botões
-document.getElementById("startBtn").addEventListener("click", ()=>{
-  if(!running){
-    start=Date.now()
-    time=0
-    running=true
-  }
-})
+let expected=best[split-1]
 
-document.getElementById("splitBtn").addEventListener("click", ()=>{
-  if(running && split<stages.length){
-    time=Date.now()-start
-    splits[split]=time
-    if(!best[split] || time<best[split]){
-      best[split]=time
-      localStorage.setItem("ix_best",JSON.stringify(best))
-    }
-    split++
-    draw()
-    if(split===stages.length) running=false
-  }
-})
+if(!expected){
+document.getElementById("pace").innerText="Pace: --"
+return
+}
 
-document.getElementById("resetBtn").addEventListener("click", ()=>{
-  running=false
-  time=0
-  split=0
-  splits=[]
-  draw()
+let diff=time-expected
+
+let targetRemaining=TARGET_TIME-expected
+
+let projected=time+targetRemaining
+
+let text="Pace: "+format(projected)
+
+if(projected<TARGET_TIME){
+text+=" (SUB 50 🔥)"
+}
+
+document.getElementById("pace").innerText=text
+
+}
+
+document.addEventListener("keydown",(e)=>{
+
+if(e.code==="Digit1"){
+
+if(!running){
+start=Date.now()
+time=0
+running=true
+}
+
+}
+
+if(e.code==="Digit2"){
+
+if(running && split<stages.length){
+
+time=Date.now()-start
+
+splits[split]=time
+
+if(!best[split] || time<best[split]){
+best[split]=time
+localStorage.setItem("ix_best",JSON.stringify(best))
+}
+
+split++
+draw()
+
+if(split===stages.length){
+running=false
+}
+
+}
+
+}
+
+if(e.code==="Digit3"){
+
+running=false
+time=0
+split=0
+splits=[]
+draw()
+
+}
+
 })
 
 draw()
