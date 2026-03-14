@@ -2,6 +2,4 @@
 
 *Digit 1 - Start*,
 *Digit 2 - Set Splits*,
-*Digit 3 - Reset Timer*,
-
-Now we Have Buttons
+*Digit 3 - Reset Timer*
